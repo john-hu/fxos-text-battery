@@ -1,0 +1,11 @@
+{
+  "name": "text-battery-level",
+  "description": "Display battery level in text",
+  "developer": {
+    "name": "John Hu"
+  },
+  "dependencies": {
+    "gulp": "*",
+    "gulp-zip": "*"
+  }
+}

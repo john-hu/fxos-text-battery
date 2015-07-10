@@ -1,0 +1,30 @@
+{
+  "name": "text-battery-level",
+  "description": "Display battery level in text",
+  "developer": {
+    "name": "John Hu"
+  },
+  "locales": {
+    "en-US": {
+      "name": "Text battery level",
+      "description": "Display battery level in text"
+    }
+  },
+  "default_locale": "en-US",
+  "package_path": "application.zip",
+  "role": "addon",
+  "type": "certified",
+  "customizations": [
+    {
+      "filter": "app://system.gaiamobile.org",
+      "scripts": [
+        "main.js"
+      ]
+    }
+  ],
+  "icons": {
+    "128": "/icons/128.png",
+    "256": "/icons/256.png",
+    "512": "/icons/512.png"
+  }
+}
