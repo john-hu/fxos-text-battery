@@ -1,10 +1,11 @@
 (function() {
   // debug at air
-  var MANIFEST_URL = 'app://33bfa81b-9b3b-8545-80d2-76ca07625ffc/manifest.webapp';
+  // var MANIFEST_URL = 'app://33bfa81b-9b3b-8545-80d2-76ca07625ffc/manifest.webapp';
   // online version
-  //var MANIFEST_URL = 'https://john-hu.github.io/fxos-text-battery/manifest.webapp';
+  var MANIFEST_URL = 'https://john-hu.github.io/fxos-text-battery/manifest.webapp';
 
   function TextBatteryLevel(addon) {
+    this.trailCount = 5;
     // this part should be moved to css file, but the CSS injection feature is
     // broken now.
     this.style = document.createElement('style');
@@ -28,6 +29,7 @@
         line-height: 1.6rem;
         color: blue;
         padding-left: 0.1rem;
+        font-size: 0.8rem;
       }`;
     this.inited = false;
   }
@@ -45,10 +47,22 @@
       return;
     }
 
+    if (!this.checkBatteryIcon()) {
+      if (this.trailCount > 0) {
+        setTimeout(this.init.bind(this), 2000);
+        this.trailCount--;
+      }
+      return;
+    }
+
     document.body.appendChild(this.style);
     this.battery.addEventListener('levelchange', this);
     this.updateDataset(this.battery.level);
     this.inited = true;
+  };
+
+  TextBatteryLevel.prototype.checkBatteryIcon = function() {
+    return document.querySelectorAll('.sb-icon-battery').length > 0;
   };
 
   TextBatteryLevel.prototype.uninit = function() {
@@ -80,37 +94,52 @@
     }
   };
 
-  function initTextBatteryLevel() {
-    // if (document.documentElement.dataset.textBatteryLevel) {
-    //   console.log('text-battery-level is already injected');
-    //   return;
-    // }
+  function TextBatteryLevelMgmt() {
+    if (document.documentElement.dataset.textBatteryLevel) {
+      console.log('text-battery-level is already injected');
+      return;
+    }
 
-    var battery = new TextBatteryLevel();
-    battery.init();
-    navigator.mozApps.mgmt.addEventListener('enabledstatechange', (e) => {
-      console.log('state change', e.application.manifestURL);
-      if (e.application.manifestURL === MANIFEST_URL) {
-        if (e.application.enabled) {
-          battery.init();
-        } else {
-          battery.uninit();
-        }
-      }
-    });
+    this.batteryIcon = new TextBatteryLevel();
+    this.batteryIcon.init();
+
+    navigator.mozApps.mgmt.addEventListener('enabledstatechange', this);
+    navigator.mozApps.mgmt.addEventListener('uninstall', this);
 
     document.documentElement.dataset.textBatteryLevel = true;
   }
 
+  TextBatteryLevelMgmt.prototype.handleEvent = function(e) {
+    if (e.application.manifestURL !== MANIFEST_URL) {
+      return;
+    }
+
+    switch(e.type) {
+      case 'enabledstatechange':
+        if (e.application.enabled) {
+          this.batteryIcon.init();
+        } else {
+          this.batteryIcon.uninit();
+        }
+        break;
+      case 'uninstall':
+        this.batteryIcon.uninit();
+        navigator.mozApps.mgmt.removeEventListener('enabledstatechange', this);
+        navigator.mozApps.mgmt.removeEventListener('uninstall', this);
+        document.documentElement.removeAttribute('data-text-battery-level');
+        break;
+    }
+  };
+
   if (document.readyState !== 'loading') {
-    initTextBatteryLevel();
+    new TextBatteryLevelMgmt();
   } else {
     document.addEventListener('readystatechange',
       function readyStateChange() {
-        if (document.readyState == 'interactive') {
+        if (document.readyState === 'interactive') {
           document.removeEventListener('readystatechange',
             readyStateChange);
-          initTextBatteryLevel();
+          new TextBatteryLevelMgmt();
         }
       });
   }
