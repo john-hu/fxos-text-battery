@@ -46,7 +46,7 @@
     }
 
     document.body.appendChild(this.style);
-    battery.addEventListener('levelchange', this);
+    this.battery.addEventListener('levelchange', this);
     this.updateDataset(this.battery.level);
     this.inited = true;
   };
@@ -55,7 +55,7 @@
     if (!this.battery) {
       return;
     }
-    battery.removeEventListener('levelchange', this);
+    this.battery.removeEventListener('levelchange', this);
     this.updateDataset(null);
     document.body.removeChild(this.style);
     this.inited = false;
@@ -75,7 +75,7 @@
   TextBatteryLevel.prototype.handleEvent = function(e) {
     switch(e.type) {
       case 'levelchange':
-        this.updateDataset(battery.level);
+        this.updateDataset(this.battery.level);
         break;
     }
   };
